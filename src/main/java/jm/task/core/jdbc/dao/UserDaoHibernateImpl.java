@@ -2,6 +2,7 @@ package jm.task.core.jdbc.dao;
 
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
+import org.hibernate.HibernateException;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -26,33 +27,56 @@ public class UserDaoHibernateImpl implements UserDao {
                 + "   lastName        VARCHAR(256),"
                 + "   age             INTEGER)");
         query.executeUpdate();
+        tx.commit();
 
     }
 
     @Override
     public void dropUsersTable() {
+        Session session = Util.getSessionFactory().getCurrentSession();
+
+        Transaction tx = session.beginTransaction();
+        SQLQuery query = session.createNativeQuery("DROP TABLE IF EXISTS Users");
+        query.executeUpdate();
+        tx.commit();
 
     }
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
-
+        Session session = Util.getSessionFactory().getCurrentSession();
+        Transaction tx = session.beginTransaction();
+        User user = new User(name, lastName, age);
+        session.save(user);
+        tx.commit();
+        session.close();
     }
 
     @Override
     public void removeUserById(long id) {
-
+        Session session = Util.getSessionFactory().getCurrentSession();
+        Transaction tx = session.beginTransaction();
+        User user = new User();
+        user.setId(id);
+        session.remove(user);
+        tx.commit();
+        session.close();
     }
 
     @Override
     public List<User> getAllUsers() {
-            try (Session session = Util.getSessionFactory().openSession()) {
-                return session.createQuery("from User", User.class).list();
-            }
+        try (Session session = Util.getSessionFactory().openSession()) {
+            return session.createQuery("from User", User.class).list();
+        }
     }
 
     @Override
     public void cleanUsersTable() {
+        Session session = Util.getSessionFactory().getCurrentSession();
 
+        Transaction tx = session.beginTransaction();
+        SQLQuery query = session.createNativeQuery("DELETE FROM Users");
+        query.executeUpdate();
+        tx.commit();
     }
 }
